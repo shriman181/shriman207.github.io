@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Synthara — Pricing the probability that power arrives</title>
+<meta name="description" content="Synthara prices the probability that power arrives — by when, at what cost, and with what confidence. Probabilistic underwriting infrastructure for grid interconnection and energization risk.">
+<meta name="theme-color" content="#000000">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Synthara — Pricing the probability that power arrives">
+<meta property="og:description" content="The queue is not a waiting line. It is a probability distribution. Synthara rates energization risk for developers, funds, lenders and insurers.">
+<meta property="og:url" content="https://synthara.cloud/">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 28'%3E%3Ccircle cx='4' cy='14' r='2.4' fill='%232E9BE6'/%3E%3Cpath d='M6.6 14H25' stroke='%232E9BE6' stroke-width='1.6'/%3E%3Cpath d='M6.6 14C14 14 18 6 25 4' stroke='%232E9BE6' stroke-width='1.4' fill='none' opacity='.6'/%3E%3Cpath d='M6.6 14C14 14 18 22 25 24' stroke='%232E9BE6' stroke-width='1.4' fill='none' opacity='.6'/%3E%3C/svg%3E">
+
+<!--
+  ─────────────────────────────────────────────────────────────────────────────
+  SYNTHARA — synthara.cloud
+  Single-file build. Deploy to GitHub Pages with the accompanying CNAME file.
+
+  PRODUCTION NOTES
+  1. All hero and card photography is HOTLINKED from images.unsplash.com.
+     Self-host these before launch (download, compress to WebP/AVIF, serve
+     from /assets). Hotlinks are fine for staging, not for production.
+  2. Founder portrait expects /assets/sarvagya.jpg — falls back to a monogram
+     card if absent. Drop the real portrait in and the fallback disappears.
+  3. Statistics in this page are drawn from the Synthara foundation document
+     and are marked in-source. Several are flagged there as VERIFY BEFORE
+     PUBLISHING (LBNL Queued Up series, ISO conversion rates, queue-to-COD
+     duration, DOE large-load directive status, equipment lead times).
+     Do not ship this page publicly until those are confirmed against primary
+     sources — this company's entire positioning is built on being right in
+     public about numbers.
+  ─────────────────────────────────────────────────────────────────────────────
+-->
+
+<style>
+/* ═══════════════════════════════ TOKENS ═══════════════════════════════ */
+:root{
+  --bg:#000;
+  --surface:rgba(13,17,22,.6);
+  --surface-solid:#0A0D11;
+  --surface-raised:rgba(20,26,33,.72);
+  --line:rgba(255,255,255,.08);
+  --line-strong:rgba(255,255,255,.16);
+  --text:#fff;
+  --muted:#8E9AA6;
+  --muted-dim:#5D6872;
+  --accent:#2E9BE6;
+  --accent-bright:#63C3FF;
+  --accent-dim:rgba(46,155,230,.14);
+  --ok:#4ADE80;
+  --risk:#E8734A;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --gut:clamp(20px,5vw,72px);
+  --maxw:1280px;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font-family:var(--sans);font-weight:300;font-size:16px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+img{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+
+:focus-visible{outline:2px solid var(--accent-bright);outline-offset:3px;border-radius:4px}
+
+::selection{background:var(--accent);color:#000}
+
+/* ═══════════════════════════════ PRIMITIVES ═══════════════════════════ */
+.wrap{width:100%;max-width:var(--maxw);margin:0 auto;padding-inline:var(--gut)}
+
+.eyebrow{
+  font-family:var(--mono);font-size:11px;font-weight:500;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--accent);
+  margin:0 0 24px;display:block;
+}
+
+h1,h2,h3,h4{font-weight:300;letter-spacing:-.02em;line-height:1.06;margin:0}
+h2{font-size:clamp(30px,4.4vw,54px)}
+h3{font-size:clamp(19px,2vw,23px);line-height:1.25;letter-spacing:-.015em}
+
+p{margin:0}
+.lead{color:var(--muted);font-size:clamp(15px,1.35vw,17.5px);line-height:1.65;max-width:60ch}
+
+.accent{color:var(--accent)}
+
+/* Buttons ------------------------------------------------------------- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  height:46px;padding:0 26px;border-radius:999px;
+  font-size:14px;font-weight:500;letter-spacing:-.01em;white-space:nowrap;
+  border:1px solid transparent;
+  transition:transform .28s var(--ease),background-color .28s var(--ease),
+             border-color .28s var(--ease),color .28s var(--ease);
+}
+.btn:hover{transform:translateY(-2px)}
+.btn-accent{background:var(--accent);color:#00131F}
+.btn-accent:hover{background:var(--accent-bright)}
+.btn-white{background:#fff;color:#000}
+.btn-white:hover{background:var(--accent-bright);color:#00131F}
+.btn-ghost{border-color:var(--line-strong);color:#fff}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent-bright);background:var(--accent-dim)}
+.btn-sm{height:38px;padding:0 18px;font-size:13px}
+
+/* Glass --------------------------------------------------------------- */
+.glass{
+  background:var(--surface);
+  -webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);
+  border:1px solid var(--line);
+}
+
+/* Section rhythm ------------------------------------------------------ */
+.band{padding-block:clamp(84px,11vw,150px);position:relative}
+.band-tight{padding-block:clamp(64px,8vw,104px)}
+
+/* Split header -------------------------------------------------------- */
+.split{
+  display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);
+  gap:clamp(28px,4vw,72px);align-items:end;margin-bottom:clamp(40px,5vw,72px);
+}
+.split-right{display:flex;flex-direction:column;align-items:flex-start;gap:26px}
+
+/* Reveal -------------------------------------------------------------- */
+.rv{opacity:0;transform:translateY(26px);transition:opacity .85s var(--ease),transform .85s var(--ease)}
+.rv.in{opacity:1;transform:none}
+
+/* ═══════════════════════════════ NAV ══════════════════════════════════ */
+.nav{
+  position:fixed;inset:0 0 auto 0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:20px;padding:18px var(--gut);
+  transition:padding .4s var(--ease);
+}
+.nav.compact{padding-block:11px}
+
+.brand{display:flex;align-items:center;gap:11px;flex-shrink:0;transition:opacity .35s var(--ease),transform .35s var(--ease)}
+.brand svg{width:26px;height:26px;color:var(--accent);flex-shrink:0}
+.brand-name{font-size:16.5px;font-weight:500;letter-spacing:.01em}
+.nav.compact .brand{opacity:0;transform:translateX(-10px);pointer-events:none}
+
+.pill{
+  display:flex;align-items:center;gap:4px;
+  padding:7px 7px 7px 18px;border-radius:999px;
+  background:rgba(10,13,17,.66);
+  -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);
+  border:1px solid var(--line);
+  transition:padding .4s var(--ease),gap .4s var(--ease);
+}
+.pill-mark{
+  width:0;overflow:hidden;opacity:0;flex-shrink:0;
+  color:var(--accent);
+  transition:width .4s var(--ease),opacity .4s var(--ease),margin .4s var(--ease);
+}
+.pill-mark svg{width:22px;height:22px;display:block}
+.nav.compact .pill-mark{width:22px;opacity:1;margin-right:12px}
+
+.pill a{
+  position:relative;display:block;padding:8px 13px;border-radius:999px;
+  font-size:13.5px;color:var(--muted);letter-spacing:-.005em;
+  transition:color .25s var(--ease);
+}
+.pill a:hover{color:#fff}
+.pill a.on{color:#fff}
+.pill a.on::after{
+  content:"";position:absolute;left:50%;bottom:1px;translate:-50% 0;
+  width:4px;height:4px;border-radius:50%;background:var(--accent);
+}
+.pill .btn{margin-left:8px}
+
+.burger{display:none;width:44px;height:44px;border-radius:999px;border:1px solid var(--line);
+  background:rgba(10,13,17,.66);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);
+  align-items:center;justify-content:center}
+.burger span{display:block;width:17px;height:1.5px;background:#fff;position:relative;transition:.3s var(--ease)}
+.burger span::before,.burger span::after{content:"";position:absolute;left:0;width:17px;height:1.5px;background:#fff;transition:.3s var(--ease)}
+.burger span::before{top:-5.5px}.burger span::after{top:5.5px}
+.burger[aria-expanded="true"] span{background:transparent}
+.burger[aria-expanded="true"] span::before{top:0;transform:rotate(45deg)}
+.burger[aria-expanded="true"] span::after{top:0;transform:rotate(-45deg)}
+
+.drawer{
+  position:fixed;inset:0;z-index:99;display:none;
+  flex-direction:column;justify-content:center;gap:6px;
+  padding:0 var(--gut);
+  background:rgba(0,0,0,.94);-webkit-backdrop-filter:blur(26px);backdrop-filter:blur(26px);
+}
+.drawer.open{display:flex}
+.drawer a{font-size:29px;font-weight:300;letter-spacing:-.02em;padding:11px 0;color:var(--muted)}
+.drawer a:hover,.drawer a.on{color:#fff}
+.drawer .btn{margin-top:24px;align-self:flex-start}
+
+/* ═══════════════════════════════ HERO ═════════════════════════════════ */
+.hero{position:relative;min-height:100svh;display:flex;align-items:center;padding-top:120px}
+.hero-bg{position:absolute;inset:0;overflow:hidden;z-index:0}
+.hero-bg img{width:100%;height:100%;object-fit:cover;object-position:50% 42%;filter:grayscale(.35) contrast(1.08)}
+.hero-bg::after{
+  content:"";position:absolute;inset:0;
+  background:
+    linear-gradient(180deg,rgba(0,0,0,.86) 0%,rgba(0,0,0,.62) 34%,rgba(0,0,0,.86) 76%,#000 100%),
+    linear-gradient(90deg,rgba(0,0,0,.9) 0%,rgba(0,0,0,.35) 58%,rgba(0,0,0,.72) 100%);
+}
+.hero-inner{position:relative;z-index:1;width:100%;padding-bottom:clamp(150px,20vw,270px)}
+
+.hero h1{
+  font-size:clamp(44px,7.2vw,104px);font-weight:300;
+  letter-spacing:-.032em;line-height:.98;max-width:15ch;
+}
+.hero h1 em{font-style:normal;color:var(--accent)}
+.hero .lead{margin-top:26px;font-size:clamp(15.5px,1.55vw,19px);max-width:56ch}
+.hero-cta{display:flex;flex-wrap:wrap;gap:12px;margin-top:38px}
+
+.hero-meta{
+  display:flex;flex-wrap:wrap;gap:10px 26px;margin-top:44px;
+  font-family:var(--mono);font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--muted-dim);
+}
+.hero-meta span{display:flex;align-items:center;gap:8px}
+.hero-meta span::before{content:"";width:5px;height:5px;background:var(--accent);border-radius:50%;flex-shrink:0}
+
+/* ── Demo card (overlaps the fold) ─────────────────────────────────── */
+.demo-shell{position:relative;z-index:3;margin-top:clamp(-200px,-16vw,-120px)}
+.demo{border-radius:18px;overflow:hidden;box-shadow:0 40px 110px rgba(0,0,0,.85)}
+
+.demo-bar{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 18px;border-bottom:1px solid var(--line);
+  font-family:var(--mono);font-size:11px;letter-spacing:.09em;
+  text-transform:uppercase;color:var(--muted-dim);
+}
+.dots{display:flex;gap:6px}
+.dots i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.15)}
+.dots i:first-child{background:rgba(255,255,255,.28)}
+.demo-bar .sep{margin-left:auto;color:var(--accent)}
+
+.demo-body{padding:clamp(20px,3vw,34px)}
+
+.prompt{display:flex;gap:14px;padding-bottom:22px;border-bottom:1px solid var(--line)}
+.avatar{
+  width:30px;height:30px;border-radius:8px;flex-shrink:0;
+  background:rgba(255,255,255,.07);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:10.5px;color:var(--muted);
+}
+.prompt p{font-size:clamp(15px,1.5vw,17.5px);line-height:1.5;letter-spacing:-.012em;max-width:64ch}
+
+.workers{display:flex;flex-direction:column;gap:2px;margin-top:22px}
+.worker{
+  display:grid;grid-template-columns:auto minmax(0,1fr);gap:16px;
+  align-items:start;padding:13px 0;
+  opacity:0;transform:translateY(12px);
+  transition:opacity .55s var(--ease),transform .55s var(--ease);
+}
+.worker.in{opacity:1;transform:none}
+.worker + .worker{border-top:1px solid rgba(255,255,255,.05)}
+.tag{
+  font-family:var(--mono);font-size:12px;color:var(--accent);
+  white-space:nowrap;padding-top:2px;min-width:112px;
+}
+.worker-text{font-size:14px;color:var(--muted);line-height:1.55;letter-spacing:-.005em}
+.worker-text b{color:#D7DEE4;font-weight:400}
+
+.done{
+  display:flex;gap:14px;align-items:flex-start;
+  margin-top:18px;padding:16px 18px;border-radius:12px;
+  background:rgba(74,222,128,.06);border:1px solid rgba(74,222,128,.22);
+  opacity:0;transform:translateY(12px);
+  transition:opacity .55s var(--ease),transform .55s var(--ease);
+}
+.done.in{opacity:1;transform:none}
+.done .check{color:var(--ok);font-size:14px;line-height:1.5;flex-shrink:0}
+.done-text{font-family:var(--mono);font-size:12.5px;line-height:1.75;color:#C9E9D5;letter-spacing:-.01em}
+.done-text b{color:#fff;font-weight:500}
+
+.composer{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  margin-top:22px;padding:11px 11px 11px 18px;
+  border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.03);
+}
+.composer .ph{font-size:14px;color:var(--muted-dim);margin-right:auto}
+.chip{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.07em;text-transform:uppercase;
+  padding:6px 11px;border-radius:999px;color:var(--muted);
+  border:1px solid var(--line);background:rgba(255,255,255,.03);
+}
+.send{
+  width:34px;height:34px;border-radius:50%;background:var(--accent);color:#00131F;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+
+/* ═══════════════════════════════ PROBLEM ══════════════════════════════ */
+.statement{
+  font-size:clamp(27px,4.15vw,50px);font-weight:300;
+  letter-spacing:-.028em;line-height:1.14;max-width:19ch;
+}
+.statement.wide{max-width:26ch}
+.centered{text-align:center;display:flex;flex-direction:column;align-items:center}
+.centered .statement{max-width:24ch}
+
+.figures{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+  gap:1px;margin-top:clamp(48px,6vw,80px);
+  background:var(--line);border-block:1px solid var(--line);
+}
+.figure{background:#000;padding:26px 24px 28px}
+.figure .n{font-size:clamp(30px,3.4vw,42px);font-weight:300;letter-spacing:-.03em;line-height:1}
+.figure .n small{font-size:.44em;color:var(--muted);margin-left:5px;letter-spacing:0}
+.figure .k{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted-dim);margin-top:14px;line-height:1.6;
+}
+
+/* ═══════════════════════════════ IMAGE CARDS ══════════════════════════ */
+.cards3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,1.6vw,22px)}
+
+.icard{display:flex;flex-direction:column}
+.icard-media{
+  position:relative;border-radius:14px;overflow:hidden;
+  aspect-ratio:4/3.35;border:1px solid var(--line);
+  transition:transform .45s var(--ease),border-color .45s var(--ease),box-shadow .45s var(--ease);
+}
+.icard:hover .icard-media{
+  transform:translateY(-6px);border-color:rgba(46,155,230,.4);
+  box-shadow:0 26px 60px rgba(0,0,0,.7),0 0 0 1px rgba(46,155,230,.14);
+}
+.icard-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(.5) contrast(1.05)}
+.icard-media::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.6),rgba(0,0,0,.88))}
+
+.panel{
+  position:absolute;z-index:2;left:14px;right:14px;bottom:14px;
+  border-radius:11px;padding:14px 15px;
+  background:rgba(6,9,12,.72);
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+  border:1px solid var(--line);
+  font-family:var(--mono);font-size:11px;line-height:1.7;color:var(--muted);
+}
+.panel-head{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding-bottom:9px;margin-bottom:9px;border-bottom:1px solid var(--line);
+  font-size:10px;letter-spacing:.11em;text-transform:uppercase;color:var(--muted-dim);
+}
+.status{display:inline-flex;align-items:center;gap:6px;color:var(--accent)}
+.status::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--accent)}
+.status.ok{color:var(--ok)}.status.ok::before{background:var(--ok)}
+.status.warn{color:var(--risk)}.status.warn::before{background:var(--risk)}
+
+.kv{display:flex;justify-content:space-between;gap:14px}
+.kv b{font-weight:400;color:#D7DEE4}
+.kv .up{color:var(--risk)}
+.kv .dn{color:var(--ok)}
+.log{color:var(--muted-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.log em{font-style:normal;color:var(--accent)}
+
+.bars{display:flex;align-items:flex-end;gap:5px;height:38px;margin:9px 0 7px}
+.bars i{flex:1;background:rgba(46,155,230,.28);border-radius:2px 2px 0 0}
+.bars i.hi{background:var(--accent)}
+.bars i.risk{background:rgba(232,115,74,.75)}
+
+.fan{width:100%;height:auto;display:block;margin:4px 0 8px}
+
+.icard h3{margin-top:22px}
+.icard p{margin-top:11px;font-size:14.5px;color:var(--muted);line-height:1.6}
+
+/* ═══════════════════════════════ PILLARS ══════════════════════════════ */
+.pillars{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(12px,1.4vw,18px);margin-top:clamp(44px,5vw,68px)}
+.pillar{background:#07090C;border:1px solid var(--line);border-radius:13px;padding:0 22px 26px;overflow:hidden}
+.pillar .topbar{height:3px;margin:0 -22px 24px;background:var(--accent)}
+.pillar:nth-child(2) .topbar{background:#5B8DEF}
+.pillar:nth-child(3) .topbar{background:var(--ok)}
+.pillar:nth-child(4) .topbar{background:var(--risk)}
+.pillar h3{font-size:17.5px;letter-spacing:-.012em}
+.pillar p{margin-top:11px;font-size:13.8px;color:var(--muted);line-height:1.62}
+
+/* ═══════════════════════════════ FOUNDER ══════════════════════════════ */
+.founder-grid{display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);gap:clamp(28px,4.5vw,72px);align-items:start}
+
+.portrait{
+  position:relative;border-radius:16px;overflow:hidden;
+  border:1px solid var(--line);aspect-ratio:4/4.7;
+  background:linear-gradient(155deg,#0C1319 0%,#05070A 62%);
+}
+.portrait img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(.3)}
+.monogram{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:clamp(72px,9vw,124px);font-weight:300;letter-spacing:-.05em;
+  color:rgba(46,155,230,.2);
+}
+.monogram::after{
+  content:"";position:absolute;inset:0;
+  background-image:radial-gradient(rgba(255,255,255,.05) 1px,transparent 1px);
+  background-size:17px 17px;
+}
+.portrait::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 42%,rgba(0,0,0,.86) 100%);z-index:1}
+.badge{
+  position:absolute;z-index:2;left:16px;right:16px;bottom:16px;
+  border-radius:11px;padding:14px 16px;
+  background:rgba(6,9,12,.7);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+  border:1px solid var(--line);
+}
+.badge .nm{font-size:17.5px;font-weight:400;letter-spacing:-.012em}
+.badge .rl{font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--accent);margin-top:7px}
+
+.founder-copy h2{max-width:16ch}
+.founder-copy p{margin-top:22px;font-size:15.5px;color:var(--muted);line-height:1.68;max-width:58ch}
+.pullquote{
+  margin-top:30px;padding:20px 0 20px 24px;
+  border-left:2px solid var(--accent);
+  font-size:clamp(16.5px,1.7vw,20px);font-weight:300;line-height:1.48;
+  letter-spacing:-.017em;color:#E4EAEF;max-width:52ch;
+}
+.founder-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+
+/* ═══════════════════════════════ TRUST ════════════════════════════════ */
+.trust-grid{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);gap:clamp(30px,5vw,80px);align-items:start;margin-top:clamp(34px,4vw,52px)}
+.tags{display:flex;flex-wrap:wrap;gap:9px;margin-top:32px}
+.tags span{
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  padding:9px 14px;border-radius:999px;color:var(--muted);
+  border:1px solid var(--line);background:rgba(255,255,255,.025);
+}
+.dotgrid{
+  position:relative;border-radius:14px;border:1px solid var(--line);
+  min-height:220px;padding:28px;overflow:hidden;
+  background-image:radial-gradient(rgba(255,255,255,.09) 1px,transparent 1px);
+  background-size:19px 19px;
+}
+.dotgrid::after{content:"";position:absolute;inset:0;background:radial-gradient(120% 90% at 22% 12%,rgba(46,155,230,.13),transparent 62%)}
+.dotgrid-inner{position:relative;z-index:1;display:flex;flex-direction:column;gap:14px;height:100%}
+.dotgrid p{font-family:var(--mono);font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted-dim);line-height:1.9}
+.dotgrid .btns{display:flex;flex-wrap:wrap;gap:10px;margin-top:auto;padding-top:22px}
+
+/* ═══════════════════════════════ FINAL CTA ════════════════════════════ */
+.final h2{font-size:clamp(31px,5.4vw,68px);letter-spacing:-.03em;line-height:1.06;max-width:17ch;margin-inline:auto}
+.final .btns{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:38px}
+
+/* ═══════════════════════════════ FOOTER ═══════════════════════════════ */
+.foot{
+  position:relative;border-top:1px solid var(--line);padding-top:clamp(56px,7vw,88px);
+  background-image:radial-gradient(rgba(255,255,255,.045) 1px,transparent 1px);
+  background-size:22px 22px;
+}
+.foot::before{content:"";position:absolute;inset:0 0 auto 0;height:180px;background:linear-gradient(180deg,#000,transparent);pointer-events:none}
+.foot-inner{position:relative;z-index:1}
+.foot-top{display:grid;grid-template-columns:minmax(0,1.5fr) repeat(4,minmax(0,1fr));gap:clamp(24px,3vw,44px)}
+.foot-brand .brand{margin-bottom:16px}
+.foot-brand p{font-size:14px;color:var(--muted);line-height:1.62;max-width:34ch}
+.fcol h4{font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--accent);font-weight:500;margin-bottom:16px}
+.fcol a{display:block;font-size:14px;color:var(--muted);padding:5px 0;transition:color .25s var(--ease)}
+.fcol a:hover{color:#fff}
+
+.watermark{
+  margin-top:clamp(48px,6vw,80px);
+  font-size:clamp(70px,17.5vw,250px);font-weight:300;letter-spacing:-.055em;line-height:.8;
+  color:rgba(255,255,255,.038);user-select:none;white-space:nowrap;overflow:hidden;
+}
+.foot-bottom{
+  display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between;
+  border-top:1px solid var(--line);margin-top:26px;padding-block:26px 34px;
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted-dim);
+}
+.foot-bottom a:hover{color:var(--accent)}
+
+/* ═══════════════════════════════ RESPONSIVE ═══════════════════════════ */
+@media (max-width:1080px){
+  .foot-top{grid-template-columns:repeat(2,minmax(0,1fr));gap:36px}
+  .foot-brand{grid-column:1/-1}
+  .pillars{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:940px){
+  .pill{display:none}
+  .burger{display:flex}
+  .nav.compact .brand{opacity:1;transform:none;pointer-events:auto}
+  .split{grid-template-columns:1fr;align-items:start;gap:26px}
+  .cards3{grid-template-columns:1fr}
+  .icard-media{aspect-ratio:16/10}
+  .founder-grid{grid-template-columns:1fr;gap:34px}
+  .portrait{max-width:420px;aspect-ratio:4/4.3}
+  .trust-grid{grid-template-columns:1fr}
+  .demo-shell{margin-top:clamp(-90px,-9vw,-56px)}
+  .hero-inner{padding-bottom:clamp(110px,22vw,180px)}
+}
+@media (max-width:620px){
+  .pillars{grid-template-columns:1fr}
+  .worker{grid-template-columns:1fr;gap:6px}
+  .tag{min-width:0}
+  .composer{border-radius:16px}
+  .figures{grid-template-columns:repeat(2,1fr)}
+  .statement,.statement.wide,.centered .statement{max-width:none}
+  .hero{min-height:auto;padding-top:132px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{transition-duration:.01ms !important;animation-duration:.01ms !important}
+  .rv,.worker,.done{opacity:1 !important;transform:none !important}
+}
+</style>
+</head>
+
+<body>
+
+<!-- ══════════════════════════════ NAV ══════════════════════════════ -->
+<header class="nav" id="nav">
+  <a class="brand" href="#top" aria-label="Synthara, home">
+    <svg viewBox="0 0 28 28" fill="none" aria-hidden="true">
+      <circle cx="4" cy="14" r="2.4" fill="currentColor"/>
+      <path d="M6.6 14H25" stroke="currentColor" stroke-width="1.6"/>
+      <path d="M6.6 14C14 14 18 6 25 4" stroke="currentColor" stroke-width="1.4" opacity=".6"/>
+      <path d="M6.6 14C14 14 18 22 25 24" stroke="currentColor" stroke-width="1.4" opacity=".6"/>
+      <path d="M19.5 3.2V24.8" stroke="currentColor" stroke-width="1" opacity=".3"/>
+    </svg>
+    <span class="brand-name">Synthara</span>
+  </a>
+
+  <nav class="pill" id="pill" aria-label="Primary">
+    <span class="pill-mark" aria-hidden="true">
+      <svg viewBox="0 0 28 28" fill="none">
+        <circle cx="4" cy="14" r="2.4" fill="currentColor"/>
+        <path d="M6.6 14H25" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M6.6 14C14 14 18 6 25 4" stroke="currentColor" stroke-width="1.4" opacity=".6"/>
+        <path d="M6.6 14C14 14 18 22 25 24" stroke="currentColor" stroke-width="1.4" opacity=".6"/>
+      </svg>
+    </span>
+    <a href="#problem" data-link>Problem</a>
+    <a href="#how" data-link>How it works</a>
+    <a href="#capabilities" data-link>Capabilities</a>
+    <a href="#founder" data-link>Founder</a>
+    <a href="#trust" data-link>Trust</a>
+    <a class="btn btn-accent btn-sm" href="mailto:founder@synthara.cloud?subject=Synthara%20%E2%80%94%20project%20review">Send a project</a>
+  </nav>
+
+  <button class="burger" id="burger" aria-label="Open menu" aria-expanded="false" aria-controls="drawer"><span></span></button>
+</header>
+
+<div class="drawer" id="drawer">
+  <a href="#problem" data-link>Problem</a>
+  <a href="#how" data-link>How it works</a>
+  <a href="#capabilities" data-link>Capabilities</a>
+  <a href="#founder" data-link>Founder</a>
+  <a href="#trust" data-link>Trust</a>
+  <a class="btn btn-accent" href="mailto:founder@synthara.cloud?subject=Synthara%20%E2%80%94%20project%20review">Send a project</a>
+</div>
+
+<main id="top">
+
+<!-- ══════════════════════════════ HERO ══════════════════════════════ -->
+<section class="hero">
+  <div class="hero-bg">
+    <img src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&amp;fit=crop&amp;w=2400&amp;q=72"
+         alt="High-voltage transmission towers carrying lines across open country at dusk">
+  </div>
+
+  <div class="wrap hero-inner">
+    <h1 class="rv">Your energization date is a <em>distribution</em>.</h1>
+    <p class="lead rv">Synthara prices the probability that power arrives — by when, at what cost, and with what confidence.</p>
+    <div class="hero-cta rv">
+      <a class="btn btn-white" href="mailto:founder@synthara.cloud?subject=Synthara%20%E2%80%94%20project%20review">Send us one project</a>
+      <a class="btn btn-ghost" href="#how">Read the methodology</a>
+    </div>
+    <div class="hero-meta rv">
+      <span>ERCOT &amp; PJM live</span>
+      <span>Cluster-level cascade simulation</span>
+      <span>Calibration published quarterly</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────────────── DEMO CARD (overlaps fold) ─────────────────────── -->
+<div class="wrap demo-shell">
+  <div class="demo glass rv" id="demo">
+    <div class="demo-bar">
+      <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span>synthara · underwriting console</span>
+      <span class="sep">cluster 2026-1 · ERCOT West</span>
+    </div>
+
+    <div class="demo-body">
+      <div class="prompt">
+        <span class="avatar" aria-hidden="true">DEV</span>
+        <p>We have 400 MW under option at a greenfield site in ERCOT West, filed into cluster 2026-1. The developer is telling our investment committee Q3 2029. What are we actually holding?</p>
+      </div>
+
+      <div class="workers" id="workers">
+        <div class="worker">
+          <span class="tag">@queue-graph</span>
+          <span class="worker-text">Normalised <b>63 ISO and non-market utility filings</b> into one schema. Cluster 2026-1 resolves to 84 active requests totalling 11.2 GW, with 9 already past their deposit deadline.</span>
+        </div>
+        <div class="worker">
+          <span class="tag">@attrition</span>
+          <span class="worker-text">Scored withdrawal probability per cluster-mate against <b>11 years of archived queue snapshots</b> — developer track record, site control, offtake status, deposit behaviour, study-milestone slippage.</span>
+        </div>
+        <div class="worker">
+          <span class="tag">@cascade</span>
+          <span class="worker-text">Ran <b>10,000 correlated cluster futures</b>. Network upgrade cost reallocated at each withdrawal; your share moves from $71M at P50 to $164M at P90 as neighbours exit.</span>
+        </div>
+        <div class="worker">
+          <span class="tag">@lead-time</span>
+          <span class="worker-text">Priced <b>main transformer, GSU and 345 kV breaker procurement</b> as a binding constraint. Equipment — not the study queue — sets your P50 date on this site.</span>
+        </div>
+      </div>
+
+      <div class="done" id="done">
+        <span class="check" aria-hidden="true">✓</span>
+        <span class="done-text">
+          <b>Synthara Score B−</b> · energization P10 Aug 2029 / <b>P50 Feb 2030</b> / P90 Nov 2031<br>
+          Upgrade cost $71M P50 · $164M P90 · stated target Q3 2029 sits at the <b>11th percentile</b>
+        </span>
+      </div>
+
+      <div class="composer" aria-hidden="true">
+        <span class="ph">Add a site, a cluster, or a portfolio…</span>
+        <span class="chip">ERCOT West</span>
+        <span class="chip">400 MW</span>
+        <span class="chip">P10/P50/P90</span>
+        <span class="send">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M8 13V3M8 3L3.5 7.5M8 3l4.5 4.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════ THE PROBLEM ══════════════════════════ -->
+<section class="band" id="problem">
+  <div class="wrap">
+    <span class="eyebrow rv">The problem</span>
+    <p class="statement wide rv">Roughly two thousand gigawatts sit in interconnection queues. About one in ten will ever be built — and every project that walks away <span class="accent">hands its upgrade cost to whoever is left standing.</span></p>
+
+    <div class="figures rv">
+      <div class="figure">
+        <div class="n">2,060–2,600<small>GW</small></div>
+        <div class="k">Capacity in US interconnection queues — at or above the entire installed US grid</div>
+      </div>
+      <div class="figure">
+        <div class="n">~10<small>%</small></div>
+        <div class="k">Of queued capacity that actually gets built. ISOs put ~20% under construction</div>
+      </div>
+      <div class="figure">
+        <div class="n">2,100<small>days</small></div>
+        <div class="k">Average queue to commercial operation — up roughly 60% since 2017</div>
+      </div>
+      <div class="figure">
+        <div class="n">40 / 24<small>%</small></div>
+        <div class="k">Conversion rates in ERCOT and comparable PJM projects</div>
+      </div>
+    </div>
+
+    <p class="lead rv" style="margin-top:clamp(40px,5vw,64px)">Under FERC Order 2023, requests arriving inside a 45-day window are studied as a cluster and the network upgrades are costed for the group. When a member withdraws, its share is reallocated across everyone remaining. Some withdraw <em>because</em> of the cost, which raises it again, which triggers more withdrawals. It is a cascade, it has a mathematical structure, and essentially nobody is simulating it.</p>
+  </div>
+</section>
+
+<!-- ══════════════════════════ HOW IT WORKS ══════════════════════════ -->
+<section class="band" id="how">
+  <div class="wrap">
+    <div class="split">
+      <h2 class="rv">We do not forecast the weather. We forecast a well-defined human decision.</h2>
+      <div class="split-right rv">
+        <p class="lead">A decade of queue history contains tens of thousands of projects that either energized, withdrew, or are still pending — each with observable features at every point in its life. That is a supervised learning problem with real labels, not a guess dressed as a model.</p>
+        <a class="btn btn-ghost" href="mailto:founder@synthara.cloud?subject=Synthara%20methodology">Request the methodology</a>
+      </div>
+    </div>
+
+    <div class="cards3">
+
+      <article class="icard rv">
+        <div class="icard-media">
+          <img src="https://images.unsplash.com/photo-1610028290816-5d937a395a49?auto=format&amp;fit=crop&amp;w=1100&amp;q=70" alt="Silhouetted transmission structure against a low sun">
+          <div class="panel">
+            <div class="panel-head"><span>ingest · queue graph</span><span class="status ok">63 jurisdictions</span></div>
+            <div class="log">14:02:11 ERCOT GIS report q2 <em>parsed</em> · 4,118 rows</div>
+            <div class="log">14:02:19 PJM new services queue <em>schema drift</em> · remapped</div>
+            <div class="log">14:02:26 MISO DPP cycle <em>snapshot v412</em> archived</div>
+            <div class="log">14:02:31 CAISO cluster 15 · 61 withdrawals <em>captured</em></div>
+            <div class="kv" style="margin-top:9px"><span>versioned since</span><b>2015-03</b></div>
+          </div>
+        </div>
+        <h3>Archive what the ISOs overwrite</h3>
+        <p>Queue data is public but published as current state, never as history. Files get overwritten, statuses change silently, withdrawn projects vanish from the sheet. The longitudinal dataset cannot be assembled retroactively — only accumulated.</p>
+      </article>
+
+      <article class="icard rv">
+        <div class="icard-media">
+          <img src="https://images.unsplash.com/photo-1504250746301-659b6b611c48?auto=format&amp;fit=crop&amp;w=1100&amp;q=70" alt="Steel transmission tower shot from below against dark sky">
+          <div class="panel">
+            <div class="panel-head"><span>attrition · cluster 2026-1</span><span class="status">84 requests</span></div>
+            <div class="bars" aria-hidden="true">
+              <i style="height:30%"></i><i style="height:52%"></i><i class="risk" style="height:88%"></i>
+              <i style="height:44%"></i><i class="hi" style="height:66%"></i><i style="height:38%"></i>
+              <i class="risk" style="height:79%"></i><i style="height:48%"></i><i style="height:58%"></i><i style="height:35%"></i>
+            </div>
+            <div class="kv"><span>P(withdraw) &gt; 0.6</span><b class="up">31 of 84</b></div>
+            <div class="kv"><span>top driver</span><b>upgrade cost / MW</b></div>
+            <div class="kv"><span>label depth</span><b>11 yrs</b></div>
+          </div>
+        </div>
+        <h3>Score the projects around you</h3>
+        <p>For every request in every queue: the probability it withdraws and the distribution of when. Developer track record, upgrade cost relative to project economics, offtake, site control, deposit behaviour, study delays, procurement signals.</p>
+      </article>
+
+      <article class="icard rv">
+        <div class="icard-media">
+          <img src="https://images.unsplash.com/photo-1574173799345-e672ea143892?auto=format&amp;fit=crop&amp;w=1100&amp;q=70" alt="Low angle view of a transmission structure and conductors">
+          <div class="panel">
+            <div class="panel-head"><span>cascade · monte carlo</span><span class="status warn">10,000 futures</span></div>
+            <div class="kv"><span>your upgrade cost P10</span><b>$44M</b></div>
+            <div class="kv"><span>P50</span><b>$71M</b></div>
+            <div class="kv"><span>P90</span><b class="up">$164M</b></div>
+            <div class="kv" style="margin-top:8px"><span>correlation</span><b>on — exits raise exits</b></div>
+            <div class="log" style="margin-top:8px">point estimate <em>suppressed by policy</em></div>
+          </div>
+        </div>
+        <h3>Simulate the cascade, not the average</h3>
+        <p>Withdrawals are not independent events. A cost shock that pushes one project out raises the cost for everyone remaining. Modelling that correlation is what makes a single number not merely imprecise but structurally misleading.</p>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ WHAT WE BELIEVE ══════════════════════════ -->
+<section class="band band-tight">
+  <div class="wrap centered">
+    <span class="eyebrow rv">What we believe</span>
+    <p class="statement rv">We publish probabilities rather than predictions, we publish the method, and we publish our own calibration record — <span class="accent">including the calls we get wrong.</span></p>
+  </div>
+</section>
+
+<!-- ══════════════════════════ CAPABILITIES ══════════════════════════ -->
+<section class="band" id="capabilities">
+  <div class="wrap">
+    <div class="split">
+      <h2 class="rv">Everyone else is building a search engine for megawatts.</h2>
+      <div class="split-right rv">
+        <p class="lead">Siting platforms answer <em>where could I build</em>. Synthara answers whether it energizes, when, and at what cost — for the capital committee, and for the capital behind it. A tool gets replaced. A unit of measurement gets written into contracts.</p>
+        <a class="btn btn-ghost" href="#founder">Who is behind this</a>
+      </div>
+    </div>
+
+    <div class="cards3">
+
+      <article class="icard rv">
+        <div class="icard-media">
+          <img src="https://images.unsplash.com/photo-1543489816-c87b0f5f7dd4?auto=format&amp;fit=crop&amp;w=1100&amp;q=70" alt="Transmission pylon beneath heavy cloud">
+          <div class="panel">
+            <div class="panel-head"><span>pathway search</span><span class="status">300 MW · Q3 2029</span></div>
+            <div class="kv"><span>surplus interconnection rights</span><b class="dn">P50 Q1 2029</b></div>
+            <div class="kv"><span>behind-the-meter gen + storage</span><b class="dn">P50 Q3 2029</b></div>
+            <div class="kv"><span>curtailable-load fast track</span><b>P50 Q2 2030</b></div>
+            <div class="kv"><span>queue position acquisition</span><b class="up">P50 Q4 2031</b></div>
+            <div class="log" style="margin-top:8px">ranked on <em>risk-adjusted</em> cost and date</div>
+          </div>
+        </div>
+        <h3>Search the whole option space</h3>
+        <p>Surplus interconnection rights at underutilised or retiring plants, behind-the-meter configurations, co-location, phased energization, curtailable-load fast tracks. This is a portfolio optimisation problem and it is currently being solved in spreadsheets.</p>
+      </article>
+
+      <article class="icard rv">
+        <div class="icard-media">
+          <img src="https://images.unsplash.com/photo-1509390559807-3144e7d29097?auto=format&amp;fit=crop&amp;w=1100&amp;q=70" alt="Transmission towers and wind turbines across open farmland">
+          <div class="panel">
+            <div class="panel-head"><span>the synthara score</span><span class="status ok">monitored</span></div>
+            <svg class="fan" viewBox="0 0 220 62" fill="none" aria-hidden="true">
+              <path d="M6 31 C60 31 96 12 214 4 L214 58 C96 50 60 31 6 31 Z" fill="rgba(46,155,230,.13)"/>
+              <path d="M6 31 C60 31 96 20 214 15" stroke="rgba(46,155,230,.45)" stroke-width="1"/>
+              <path d="M6 31 C60 31 96 42 214 47" stroke="rgba(46,155,230,.45)" stroke-width="1"/>
+              <path d="M6 31 C60 31 96 31 214 31" stroke="#2E9BE6" stroke-width="1.4"/>
+              <path d="M78 2V60" stroke="#E8734A" stroke-width="1.2" stroke-dasharray="3 3"/>
+              <circle cx="6" cy="31" r="2.6" fill="#2E9BE6"/>
+            </svg>
+            <div class="kv"><span>stated target</span><b class="up">11th percentile</b></div>
+            <div class="kv"><span>grade</span><b>B− · outlook stable</b></div>
+          </div>
+        </div>
+        <h3>One number two counterparties can agree on</h3>
+        <p>A published, methodologically transparent rating of energization risk for a named project at a named site — designed from day one to be quotable in a credit memo. The value is not accuracy alone. It is a common measurement.</p>
+      </article>
+
+      <article class="icard rv">
+        <div class="icard-media">
+          <img src="https://images.unsplash.com/photo-1556341984-69c93f636618?auto=format&amp;fit=crop&amp;w=1100&amp;q=70" alt="Transmission tower silhouetted against a dark sky">
+          <div class="panel">
+            <div class="panel-head"><span>portfolio surveillance</span><span class="status warn">2 alerts</span></div>
+            <div class="kv"><span>Permian Basin 220 MW</span><b class="dn">B+ → A−</b></div>
+            <div class="kv"><span>Loudoun County 480 MW</span><b class="up">BB → B−</b></div>
+            <div class="kv"><span>Hardin County 150 MW</span><b>B stable</b></div>
+            <div class="log" style="margin-top:8px">trigger: <em>3 cluster-mates withdrew</em> · cost reallocated</div>
+            <div class="log">trigger: <em>GSU lead time +14 wks</em> · P50 slipped</div>
+          </div>
+        </div>
+        <h3>Watch the whole book, continuously</h3>
+        <p>Energization risk is not a diligence snapshot. Scores are re-run as clusters move, studies land, tariffs change and equipment lead times shift, so a fund learns its exposure moved before the quarterly report does.</p>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ FOUR PILLARS ══════════════════════════ -->
+<section class="band band-tight">
+  <div class="wrap centered">
+    <span class="eyebrow rv">What you get</span>
+    <h2 class="rv" style="max-width:20ch">Four things a consultant's opinion cannot give you.</h2>
+  </div>
+  <div class="wrap">
+    <div class="pillars">
+      <article class="pillar rv">
+        <div class="topbar"></div>
+        <h3>A versioned archive</h3>
+        <p>Queue snapshots captured and preserved since 2015, across sixty-plus jurisdictions that change format without notice. Public data, privately archived — the asset that cannot be bought after the fact.</p>
+      </article>
+      <article class="pillar rv">
+        <div class="topbar"></div>
+        <h3>Correlated cascade simulation</h3>
+        <p>Cluster cost reallocation modelled with the correlation structure intact, because withdrawals trigger withdrawals. The distribution of your upgrade cost, not a number that will move.</p>
+      </article>
+      <article class="pillar rv">
+        <div class="topbar"></div>
+        <h3>A published track record</h3>
+        <p>Calibration and Brier score updated quarterly, misses included. Of the projects we assigned a 70% withdrawal probability, we report what fraction actually withdrew.</p>
+      </article>
+      <article class="pillar rv">
+        <div class="topbar"></div>
+        <h3>Equipment as a hard constraint</h3>
+        <p>An executed interconnection agreement without a transformer, a GSU, switchgear or a turbine is not power. Lead times are modelled first-class, because for many sites they are now binding.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ FOUNDER ══════════════════════════ -->
+<section class="band" id="founder">
+  <div class="wrap">
+    <span class="eyebrow rv">Founder</span>
+    <div class="founder-grid">
+
+      <div class="portrait rv">
+        <!-- Replace with the real portrait at /assets/sarvagya.jpg; monogram is the fallback -->
+        <div class="monogram" aria-hidden="true">SS</div>
+        <img src="assets/sarvagya.jpg" alt="Sarvagya Singh, founder of Synthara"
+             onerror="this.remove()">
+        <div class="badge">
+          <div class="nm">Sarvagya Singh</div>
+          <div class="rl">Founder · Synthara</div>
+        </div>
+      </div>
+
+      <div class="founder-copy">
+        <h2 class="rv">Unpriced risks eventually get priced by somebody.</h2>
+        <p class="rv">Synthara exists because of a pattern that everyone in this market has lived through and almost nobody has written down. A study result lands at an acceptable number. Capital gets committed against it. Then, over the following year, companies you have never met make decisions you had no way to anticipate, and the number you underwrote is gone.</p>
+        <p class="rv">The industry files that under bad luck. It is not bad luck. It is a measurable, simulable cascade with a known mechanism, and treating it as noise is the single most expensive habit in infrastructure right now. Synthara is being built to measure it in public, publish the method, and be graded on the record.</p>
+
+        <blockquote class="pullquote rv">“I watched a project's upgrade cost triple in eleven months because four companies I had never met made decisions I had no way to anticipate. Everyone treated that as bad luck.”</blockquote>
+
+        <div class="founder-actions rv">
+          <a class="btn btn-accent" href="mailto:founder@synthara.cloud?subject=Synthara%20%E2%80%94%20intro">founder@synthara.cloud</a>
+          <a class="btn btn-ghost" href="https://www.linkedin.com/in/sarvagyasingh-dev/" target="_blank" rel="noopener">LinkedIn</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ TRUST & DATA ══════════════════════════ -->
+<section class="band" id="trust">
+  <div class="wrap">
+    <span class="eyebrow rv">Trust &amp; data</span>
+    <h2 class="rv" style="max-width:18ch">A ratings business that hides its record has no business.</h2>
+
+    <div class="trust-grid">
+      <div class="rv">
+        <p class="lead">Every input we use is public-source and provenance-tracked back to the filing it came from — ISO queue reports, study results, tariff dockets, interconnection agreements. What clients send us stays isolated to their tenant and never enters a shared model. Our rating framework is published, our methodology committee is separate from any advisory engagement, and named public calls go through legal review before they go out.</p>
+        <div class="tags">
+          <span>Public-source provenance</span>
+          <span>Versioned snapshots</span>
+          <span>Tenant isolation</span>
+          <span>RBAC</span>
+          <span>SOC 2 Type II — in progress</span>
+          <span>No client data in training</span>
+          <span>Rating / advisory separation</span>
+          <span>Published methodology</span>
+          <span>Quarterly calibration</span>
+        </div>
+      </div>
+
+      <div class="dotgrid rv">
+        <div class="dotgrid-inner">
+          <p>
+            Coverage · ERCOT, PJM live<br>
+            Next · MISO, CAISO, SPP<br>
+            Then · UK &amp; Ireland, Nordics, Japan, India<br>
+            Archive depth · jurisdictions × years, published
+          </p>
+          <div class="btns">
+            <a class="btn btn-accent btn-sm" href="mailto:founder@synthara.cloud?subject=Synthara%20%E2%80%94%20design%20partner">Become a design partner</a>
+            <a class="btn btn-ghost btn-sm" href="mailto:founder@synthara.cloud?subject=Synthara%20%E2%80%94%20rating%20framework">Rating framework</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ FINAL CTA ══════════════════════════ -->
+<section class="band final">
+  <div class="wrap centered">
+    <span class="eyebrow rv">Get started</span>
+    <h2 class="rv">Send us one project. We'll return a distribution, not a date.</h2>
+    <div class="btns rv">
+      <a class="btn btn-white" href="mailto:founder@synthara.cloud?subject=Synthara%20%E2%80%94%20project%20review">Send us one project</a>
+      <a class="btn btn-ghost" href="mailto:founder@synthara.cloud?subject=Synthara%20%E2%80%94%20methodology">Request the methodology</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ══════════════════════════ FOOTER ══════════════════════════ -->
+<footer class="foot">
+  <div class="wrap foot-inner">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <a class="brand" href="#top" aria-label="Synthara, home">
+          <svg viewBox="0 0 28 28" fill="none" aria-hidden="true">
+            <circle cx="4" cy="14" r="2.4" fill="currentColor"/>
+            <path d="M6.6 14H25" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M6.6 14C14 14 18 6 25 4" stroke="currentColor" stroke-width="1.4" opacity=".6"/>
+            <path d="M6.6 14C14 14 18 22 25 24" stroke="currentColor" stroke-width="1.4" opacity=".6"/>
+            <path d="M19.5 3.2V24.8" stroke="currentColor" stroke-width="1" opacity=".3"/>
+          </svg>
+          <span class="brand-name">Synthara</span>
+        </a>
+        <p>Probabilistic underwriting infrastructure for grid interconnection. We price the probability that power arrives.</p>
+      </div>
+
+      <div class="fcol">
+        <h4>Product</h4>
+        <a href="#how">Queue graph</a>
+        <a href="#how">Attrition model</a>
+        <a href="#how">Cascade simulation</a>
+        <a href="#capabilities">Pathway search</a>
+        <a href="#capabilities">The Synthara Score</a>
+      </div>
+
+      <div class="fcol">
+        <h4>Who uses it</h4>
+        <a href="#capabilities">Developers &amp; IPPs</a>
+        <a href="#capabilities">Infrastructure funds</a>
+        <a href="#capabilities">Project finance banks</a>
+        <a href="#capabilities">Delay-in-startup insurers</a>
+        <a href="#capabilities">Transaction advisors</a>
+      </div>
+
+      <div class="fcol">
+        <h4>Method</h4>
+        <a href="#trust">Rating framework</a>
+        <a href="#trust">Calibration record</a>
+        <a href="#trust">Data provenance</a>
+        <a href="#problem">Cluster cost reallocation</a>
+      </div>
+
+      <div class="fcol">
+        <h4>Company</h4>
+        <a href="#founder">Founder</a>
+        <a href="mailto:founder@synthara.cloud">Contact</a>
+        <a href="https://www.linkedin.com/in/sarvagyasingh-dev/" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="mailto:founder@synthara.cloud?subject=Synthara%20%E2%80%94%20design%20partner">Design partners</a>
+      </div>
+    </div>
+
+    <div class="watermark" aria-hidden="true">SYNTHARA</div>
+
+    <div class="foot-bottom">
+      <span>© 2026 Synthara. All rights reserved.</span>
+      <span>Sarvagya Singh · <a href="https://synthara.cloud">synthara.cloud</a></span>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ── Scroll reveal ─────────────────────────────────────────────── */
+  var revealables = document.querySelectorAll(".rv");
+  if (reduce || !("IntersectionObserver" in window)) {
+    revealables.forEach(function(el){ el.classList.add("in"); });
+  } else {
+    var ro = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (!e.isIntersecting) return;
+        var siblings = Array.prototype.slice.call(e.target.parentNode.children).filter(function(n){
+          return n.classList && n.classList.contains("rv");
+        });
+        var i = Math.min(siblings.indexOf(e.target), 5);
+        e.target.style.transitionDelay = (i > 0 ? i * 80 : 0) + "ms";
+        e.target.classList.add("in");
+        ro.unobserve(e.target);
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
+    revealables.forEach(function(el){ ro.observe(el); });
+  }
+
+  /* ── Hero demo: sequential worker reveal ───────────────────────── */
+  var workers = Array.prototype.slice.call(document.querySelectorAll("#workers .worker"));
+  var done = document.getElementById("done");
+  var demo = document.getElementById("demo");
+
+  if (reduce || !("IntersectionObserver" in window)) {
+    workers.forEach(function(w){ w.classList.add("in"); });
+    if (done) done.classList.add("in");
+  } else if (demo) {
+    var played = false;
+    var demoObs = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (!e.isIntersecting || played) return;
+        played = true;
+        workers.forEach(function(w, i){
+          setTimeout(function(){ w.classList.add("in"); }, 520 + i * 620);
+        });
+        setTimeout(function(){
+          if (done) done.classList.add("in");
+        }, 520 + workers.length * 620 + 260);
+        demoObs.disconnect();
+      });
+    }, { threshold: 0.3 });
+    demoObs.observe(demo);
+  }
+
+  /* ── Nav: compact on scroll ────────────────────────────────────── */
+  var nav = document.getElementById("nav");
+  var lastCompact = null;
+  function onScroll(){
+    var c = window.scrollY > 60;
+    if (c !== lastCompact) { nav.classList.toggle("compact", c); lastCompact = c; }
+  }
+  onScroll();
+  window.addEventListener("scroll", onScroll, { passive: true });
+
+  /* ── Nav: active link follows scroll ───────────────────────────── */
+  var links = Array.prototype.slice.call(document.querySelectorAll("[data-link]"));
+  var ids = ["problem","how","capabilities","founder","trust"];
+  var sections = ids.map(function(id){ return document.getElementById(id); }).filter(Boolean);
+
+  function setActive(id){
+    links.forEach(function(a){
+      a.classList.toggle("on", a.getAttribute("href") === "#" + id);
+    });
+  }
+
+  if ("IntersectionObserver" in window && sections.length) {
+    var visible = {};
+    var so = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ visible[e.target.id] = e.isIntersecting ? e.intersectionRatio : 0; });
+      var best = null, bestR = 0;
+      Object.keys(visible).forEach(function(k){
+        if (visible[k] > bestR) { bestR = visible[k]; best = k; }
+      });
+      if (best) setActive(best);
+      else links.forEach(function(a){ a.classList.remove("on"); });
+    }, { threshold: [0, 0.2, 0.5, 0.8], rootMargin: "-45% 0px -45% 0px" });
+    sections.forEach(function(s){ so.observe(s); });
+  }
+
+  /* ── Mobile drawer ─────────────────────────────────────────────── */
+  var burger = document.getElementById("burger");
+  var drawer = document.getElementById("drawer");
+  function closeDrawer(){
+    drawer.classList.remove("open");
+    burger.setAttribute("aria-expanded", "false");
+    burger.setAttribute("aria-label", "Open menu");
+    document.body.style.overflow = "";
+  }
+  burger.addEventListener("click", function(){
+    var open = drawer.classList.toggle("open");
+    burger.setAttribute("aria-expanded", String(open));
+    burger.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+    document.body.style.overflow = open ? "hidden" : "";
+  });
+  drawer.addEventListener("click", function(e){
+    if (e.target.tagName === "A") closeDrawer();
+  });
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape" && drawer.classList.contains("open")) { closeDrawer(); burger.focus(); }
+  });
+})();
+</script>
+
+</body>
+</html>
